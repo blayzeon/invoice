@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoices</title>
+    <style>
+      #table-container {
+        margin-inline: auto;
+        padding: 3%;
+      }
+
+      table {
+        min-width: 250px;
+        margin-bottom: 2rem;
+      }
+
+      table {
+        font-family: arial, sans-serif;
+        border-collapse: collapse;
+        width: 100%;
+      }
+
+      td,
+      th {
+        padding: 8px;
+      }
+
+      th {
+        background-color: hsl(195, 53%, 79%);
+        border-bottom: 1px solid black;
+      }
+
+      .grid-container {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        margin-bottom: 1rem;
+      }
+
+      .grid-container p,
+      .grid-container h1 {
+        margin: 0;
+        padding: 0;
+      }
+
+      .contact-info {
+        text-align: center;
+      }
+
+      #modal {
+        min-width: 30%;
+      }
+
+      .align-right {
+        text-align: right !important;
+      }
+
+      .flex-space-between {
+        display: flex;
+        justify-content: space-between;
+        padding: 0.5rem 0;
+      }
+
+      #grand-total {
+        padding: 0 1rem;
+        margin: 0 1rem;
+        font-size: xx-large;
+        flex-wrap: nowrap;
+        font-weight: bolder;
+        border: 0.1rem solid black;
+      }
+
+      #item-table {
+        border: 0.1rem solid black;
+      }
+
+      #item-table .editable:hover,
+      .editable:hover {
+        cursor: pointer;
+        background-color: #e7e7e7;
+      }
+
+      #item-table * {
+        text-align: center;
+      }
+
+      #item-table select {
+        all: unset;
+      }
+
+      .money::before {
+        content: "$";
+      }
+
+      .hide {
+        display: none;
+      }
+
+      dialog {
+        margin-top: 10%;
+        border: 0.1rem solid black;
+        border-radius: 0.5rem;
+        min-width: 300px;
+      }
+
+      dialog > * {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+      }
+
+      .input-label {
+        border: 1px solid black;
+        border-radius: 1rem;
+        padding: 0.5rem;
+      }
+
+      .input-label > input {
+        border: none;
+      }
+
+      #credit-row {
+        border-top: 1px solid black;
+      }
+
+      #logo {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        min-height: 5rem;
+        gap: 1rem;
+        padding: 1rem 0;
+        margin: 1rem 0;
+      }
+
+      #logo address {
+        font-style: normal;
+      }
+
+      p,
+      h1,
+      h2,
+      h3 {
+        padding: 0;
+        margin: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="table-container">
+      <div id="invoice" class="flex-space-between">
+        <div>
+          <h3>Invoice #: <span contenteditable="true">000</span></h3>
+          <p id="date"></p>
+        </div>
+        <div>
+          <h3>Bill To</h3>
+          <div class="editable" contenteditable="true">
+            Customer Name<br />
+            Customer Company<br />
+            Customer Address
+          </div>
+        </div>
+      </div>
+      <div id="logo">
+        <h1>Monica's Cococastile</h1>
+        <address>
+          (352) 372-1026 <br />
+          SoapMakerMonica@gmail.com <br />
+          6518 SE HAWTHORNE RD<br />
+          GAINESVILLE, FL 32641
+        </address>
+      </div>
+      <table id="item-table">
+        <thead id="btn" class="editable">
+          <tr>
+            <th>Quantity</th>
+            <th>Product</th>
+            <th>Type</th>
+            <th>Price</th>
+            <th>Amount</th>
+          </tr>
+        </thead>
+        <tbody id="tbody">
+          <tr id="credit-row">
+            <td colspan="3"></td>
+            <td>Credit</td>
+            <td class="money editable" id="credit">0.00</td>
+          </tr>
+          <tr id="total-row">
+            <td colspan="3"></td>
+            <td><strong>Total</strong></td>
+            <td class="money" id="total">0.00</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    <script>
+      // data presets
+      const SCENTS = [
+        "Unscented",
+        "Apple Blossom",
+        "Bay Rum",
+        "Balsam and Cedar",
+        "Cherry Blossom",
+        "Creamy Coconut",
+        "Eucalyptus Lavender Tea Tree",
+        "Frankincense and Myrrh",
+        "Key Lime",
+        "Lavender",
+        "Lemongrass",
+        "Nag Champa",
+        "Oatmeal",
+        "Patchouli",
+        "Patchouli Rose",
+        "Patchouli Ylang",
+        "Plumeria",
+        "Rosemary Peppermint",
+        "Sandalwood",
+        "Sunny Citrus",
+        "Vanilla Bean",
+      ];
+
+      const PRODUCTS = [
+        {
+          id: 0,
+          product: "Bar",
+          price: 4.85,
+        },
+        {
+          id: 1,
+          product: "Shampoo",
+          price: 8.5,
+        },
+        {
+          id: 2,
+          product: "Body Wash",
+          price: 8.5,
+        },
+        {
+          id: 3,
+          product: "Body Butter",
+          price: 5.5,
+        },
+        {
+          id: 4,
+          product: "Deodorant",
+          price: 5.5,
+        },
+        {
+          id: 5,
+          product: "Face Wash",
+          price: 8.5,
+        },
+      ];
+
+      function returnElm(dataObj) {
+        // creates and returns an HTML element based on data from an object
+        const elms = {};
+        const elm = document.createElement(dataObj.elm);
+        elms.elm = elm;
+
+        if (dataObj.attributes) {
+          dataObj.attributes.forEach((item) => {
+            elm.setAttribute(item.key, item.value);
+          });
+        }
+
+        if (dataObj.text) {
+          elm.innerText = dataObj.text;
+        }
+
+        if (dataObj.elm === "select") {
+          dataObj.options.forEach((item) => {
+            elms[item] = item;
+            const option = document.createElement("option");
+            if (item.product) {
+              option.value = item.id;
+              option.innerText = item.product;
+            } else {
+              option.value = item;
+              option.innerText = item;
+            }
+
+            elm.appendChild(option);
+          });
+        }
+
+        if (dataObj.className) {
+          elm.classList.add(dataObj.className);
+        }
+
+        return elms;
+      }
+
+      function returnRow() {
+        // creates and returns an entire html table row using return elm
+        const qtyObj = {
+          elm: "td",
+          attributes: [{ key: "data-qty", value: "qty" }],
+          text: "0",
+          className: "editable",
+        };
+
+        const proObj = {
+          elm: "select",
+          options: PRODUCTS,
+          attributes: [{ key: "data-product", value: "product" }],
+          className: "editable",
+        };
+
+        const typeObj = {
+          elm: "select",
+          options: SCENTS,
+          attributes: [{ key: "data-type", value: "type" }],
+          className: "editable",
+        };
+
+        const priceObj = {
+          elm: "td",
+          attributes: [{ key: "data-price", value: "price" }],
+          text: PRODUCTS[0].price,
+          className: "money",
+        };
+
+        const amtObj = {
+          elm: "td",
+          attributes: [{ key: "data-amt", value: "amt" }],
+          text: "0.00",
+          className: "money",
+        };
+
+        function updatePrices() {
+          // adjust price and line total based on product
+          const base = PRODUCTS[product.elm.value].price;
+          price.elm.innerText = base.toFixed(2);
+          const newAmt = parseFloat(base * qty.elm.innerText);
+          amt.elm.innerText = newAmt.toFixed(2);
+
+          // grand total
+          updateTotal();
+        }
+
+        const container = document.createElement("tr");
+        const qty = returnElm(qtyObj);
+        qty.elm.addEventListener("click", () => {
+          const a = prompt("Enter amount: ");
+          if (a === "0" || a === "" || a === null) {
+            const b = confirm("Delete row?");
+            if (b) {
+              container.remove();
+            }
+          } else {
+            qty.elm.innerText = a;
+          }
+
+          updatePrices();
+          return a;
+        });
+
+        container.appendChild(qty.elm); // quantity
+
+        // products
+        const productContainer = document.createElement("td");
+        const product = returnElm(proObj);
+        productContainer.appendChild(product.elm);
+        container.appendChild(productContainer);
+
+        // type
+        const typeContainer = document.createElement("td");
+        const type = returnElm(typeObj);
+        typeContainer.appendChild(type.elm);
+        container.appendChild(typeContainer);
+
+        // price
+        const price = returnElm(priceObj);
+        container.appendChild(price.elm);
+
+        // amount
+        const amt = returnElm(amtObj);
+        container.appendChild(amt.elm);
+        product.elm.addEventListener("change", () => {
+          updatePrices();
+        });
+
+        return container;
+      }
+
+      // button for adding rows
+      const btn = document.getElementById("btn");
+      function addRow() {
+        // parent/sibling for inserting
+        const parent = document.getElementById("tbody");
+        const totalRow = document.getElementById("credit-row"); // for insert before
+
+        // create and append to document
+        parent.insertBefore(returnRow(), totalRow);
+      }
+
+      // event listeners
+      const credit = document.getElementById("credit");
+
+      function updateTotal() {
+        let total = 0;
+        const totalElms = document.querySelectorAll("[data-amt]");
+        totalElms.forEach((elm) => {
+          total += parseFloat(elm.innerText);
+        });
+
+        total = total - parseFloat(credit.innerText);
+
+        const elm = document.getElementById("total");
+        elm.innerText = total.toFixed(2);
+      }
+
+      credit.addEventListener("click", () => {
+        const a = prompt("Credit amount: ");
+        if (a === null || a === "" || isNaN(a)) {
+          return;
+        } else {
+          credit.innerText = parseFloat(a).toFixed(2);
+        }
+        updateTotal();
+      });
+      btn.addEventListener("click", addRow);
+
+      addRow();
+
+      // date
+      const dateElm = document.getElementById("date");
+      const date = new Date().toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
+
+      dateElm.innerHTML = date;
+    </script>
+  </body>
+</html>
