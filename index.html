@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Invoices</title>
     <style>
+      #item-table select {
+        all: unset;
+        width: 100%;
+      }
+
       #table-container {
         margin-inline: auto;
         padding: 3%;
@@ -26,7 +31,7 @@
         padding: 8px;
       }
 
-      th {
+      thead {
         background-color: hsl(195, 53%, 79%);
         border-bottom: 1px solid black;
       }
@@ -77,15 +82,11 @@
       #item-table .editable:hover,
       .editable:hover {
         cursor: pointer;
-        background-color: #e7e7e7;
+        background-color: #e7e7e7 !important;
       }
 
       #item-table * {
         text-align: center;
-      }
-
-      #item-table select {
-        all: unset;
       }
 
       .money::before {
@@ -147,26 +148,48 @@
         padding: 0;
         margin: 0;
       }
+
+      #bill-to {
+        min-width: 20rem;
+      }
+
+      #client-address {
+        text-transform: uppercase;
+      }
+
+      .hidden {
+        display: none;
+      }
     </style>
   </head>
   <body>
     <div id="table-container">
       <div id="invoice" class="flex-space-between">
         <div>
-          <h3>Invoice #: <span class="editable" contenteditable="true">000</span></h3>
+          <h3>
+            Invoice #: <span class="editable" contenteditable="true">000</span>
+          </h3>
           <p id="date" class="editable" contenteditable="true"></p>
         </div>
-        <div>
-          <h3>Bill To</h3>
-          <div class="editable" contenteditable="true">
-            Customer Name<br />
-            Customer Company<br />
-            Customer Address
-          </div>
+        <div id="bill-to" class="align-right">
+          <h3>Bill To:</h3>
+          <select name="clients" id="client-select">
+            <option value="0">Ward's</option>
+            <option value="1">Sunflower</option>
+            <option value="2">Micanopy Outpost</option>
+            <option value="3">Chiappini's</option>
+            <option value="4">Florida Heritage</option>
+            <option value="5">Gem City</option>
+          </select>
+          <div
+            contenteditable="true"
+            class="editable hidden"
+            id="client-address"
+          ></div>
         </div>
       </div>
       <div id="logo">
-        <h1>Monica's Cococastile</h1>
+        <h1 class="editable" onclick="print()">Monica's Cococastile</h1>
         <address>
           (352) 372-1026 <br />
           SoapMakerMonica@gmail.com <br />
@@ -207,6 +230,7 @@
         "Balsam and Cedar",
         "Cherry Blossom",
         "Creamy Coconut",
+        "Citrus Blast",
         "Eucalyptus Lavender Tea Tree",
         "Frankincense and Myrrh",
         "Key Lime",
@@ -214,6 +238,7 @@
         "Lemongrass",
         "Nag Champa",
         "Oatmeal",
+        "Peace and Calm",
         "Patchouli",
         "Patchouli Rose",
         "Patchouli Ylang",
@@ -428,6 +453,23 @@
       btn.addEventListener("click", addRow);
 
       addRow();
+
+      const addrSel = document.getElementById("client-select");
+      addrSel.addEventListener("change", () => {
+        const addr = [
+          "Ward's Supermarket<br>515 NW 23rd Ave<br>Gainesville, FL 32609",
+          "Sunflower Health food store<br>3424 W University Ave<br>Gainesville, FL 32607",
+          "Micanopy Outpost<br>205 NE Cholokka Blvd<br>Micanopy, FL 32667",
+          "Chiappini's Gulf Station<br>326 FL-26<br>Melrose, FL 32666",
+          "Florida Heritage book store<br>106 NE Hwy 441 A<br>Micanopy, FL 32667",
+          "Gem City Cottage<br>218 St Johns Ave<br>Palatka, FL 32177",
+        ];
+        addrSel.classList.add("hidden");
+
+        const div = document.getElementById("client-address");
+        div.classList.remove("hidden");
+        div.innerHTML = addr[parseInt(addrSel.value)];
+      });
 
       // date
       const dateElm = document.getElementById("date");
